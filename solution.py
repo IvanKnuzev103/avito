@@ -12,9 +12,15 @@ train_df = pd.read_parquet(os.path.join(DATA_DIR, 'train.parquet'))
 queries_df = pd.read_parquet(os.path.join(DATA_DIR, 'benchmark_queries.parquet'))
 items_df = pd.read_parquet(os.path.join(DATA_DIR, 'benchmark_items.parquet'))
 
-items_text = (items_df['item_title_raw'].fillna('') + ' ' + items_df['item_infm_params_text'].fillna('')).str.lower()
+items_text = (
+    items_df['item_title_raw'].fillna('') + ' ' + 
+    items_df['item_infm_params_text'].fillna('')
+).str.lower()
 
-queries_txt = (queries_df['search_query'].fillna('') + ' ' +queries_df['search_infm_params_text'].fillna('')).str.lower()
+queries_text = (
+    queries_df['search_query'].fillna('') + ' ' +
+    queries_df['search_infm_params_text'].fillna('')
+).str.lower()
 
 has_categories = 'microcat_id' in items_df.columns and 'microcat_id' in queries_df.columns
 if has_categories:
@@ -36,9 +42,18 @@ def stemmed_words(doc):
     for token in analyzer(doc):
         yield ru_stemmer.stemWord(en_stemmer.stemWord(token))
 
-word_vec = TfidfVectorizer(analyzer=stemmed_words, max_features=60000, sublinear_tf=True)
+word_vec = TfidfVectorizer(
+    analyzer=stemmed_words,
+    max_features=60000,
+    sublinear_tf=True
+)
 
-char_vec = TfidfVectorizer(analyzer='char_wb',ngram_range=(3, 5),max_features=60000, sublinear_tf=True)
+char_vec = TfidfVectorizer(
+    analyzer='char_wb',
+    ngram_range=(3, 5),
+    max_features=60000,
+    sublinear_tf=True
+)
 
 X_items_w = normalize(word_vec.fit_transform(items_text), axis=1)
 X_queries_w = normalize(word_vec.transform(queries_text), axis=1)
@@ -93,4 +108,7 @@ for i in range(0, num_queries, batch_size):
                     
         predictions.append(' '.join(top_ids[:50]))
 
-pd.DataFrame({'query_id': query_ids,'answer': predictions}).to_csv('answer.csv', index=False)
+pd.DataFrame({
+    'query_id': query_ids,
+    'answer': predictions
+}).to_csv('answer.csv', index=False)
